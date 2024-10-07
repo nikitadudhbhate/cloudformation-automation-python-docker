@@ -1,0 +1,2 @@
+boto3==1.26.0  # AWS SDK for Python
+awscli==1.25.0  # AWS Command Line Interface
