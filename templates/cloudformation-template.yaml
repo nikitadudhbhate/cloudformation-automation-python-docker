@@ -1,0 +1,8 @@
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties: 
+      InstanceType: t2.micro
+      ImageId: ami-0c55b159cbfafe1f0
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
