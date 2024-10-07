@@ -4,6 +4,6 @@ Resources:
     Type: AWS::EC2::Instance
     Properties: 
       InstanceType: t2.micro
-      ImageId: ami-0c55b159cbfafe1f0  # Update this to a valid AMI ID in your region
+      ImageId: ami-0cde6390e61a03eee  # Update this to a valid AMI ID in your region
   MyS3Bucket:
     Type: AWS::S3::Bucket
