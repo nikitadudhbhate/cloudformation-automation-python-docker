@@ -4,7 +4,7 @@
     "MyEC2Instance": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
-        "InstanceType": "t2.micro",
+        "InstanceType": "t2.medium",
         "ImageId": "ami-032346ab877c418af",
         "KeyName": "${{ secrets.EC2_KEY }}"
       }
