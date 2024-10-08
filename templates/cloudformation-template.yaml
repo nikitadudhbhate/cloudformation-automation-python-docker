@@ -1,15 +1,26 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Description: "Basic CloudFormation Template for EC2 and S3"
-
-Resources:
-  MyEC2Instance:
-    Type: "AWS::EC2::Instance"
-    Properties: 
-      InstanceType: "t2.micro"
-      ImageId: "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI in us-east-1
-      KeyName: "prod-server-key1"  # Ensure this key exists in your EC2 key pairs
-
-  MyS3Bucket:
-    Type: "AWS::S3::Bucket"
-    Properties:
-      BucketName: "my-infrastructure-bucket-123456"  # Ensure this is unique across all S3 buckets
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "MyEC2Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": "t2.micro",
+        "ImageId": "ami-0c55b159cbfafe1f0",
+        "KeyName": "${{ secrets.EC2_KEY }}"
+      }
+    },
+    "MyS3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "infra-deploy"
+      }
+    }
+  },
+  "Outputs": {
+    "BucketName": {
+      "Value": {
+        "Ref": "MyS3Bucket"
+      }
+    }
+  }
+}
