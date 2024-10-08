@@ -6,9 +6,12 @@ import time
 stack_name = "my-cloudformation-stack"
 template_file = "templates/cloudformation-template.yaml"
 
-# Initialize boto3 CloudFormation and S3 clients
-cf_client = boto3.client('cloudformation')
-s3_client = boto3.client('s3')
+# Specify your region here
+region = 'us-east-1'
+
+# Initialize boto3 CloudFormation and S3 clients with the specified region
+cf_client = boto3.client('cloudformation', region_name=region)
+s3_client = boto3.client('s3', region_name=region)
 
 # Function to load the CloudFormation template from file
 def load_template(template_file):
