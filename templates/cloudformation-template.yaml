@@ -1,28 +1,15 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: Simple template to create an EC2 instance and an S3 bucket.
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Basic CloudFormation Template for EC2 and S3"
 
 Resources:
   MyEC2Instance:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: t2.micro  # Instance type
-      ImageId: ami-0cde6390e61a03eee  # Replace with your chosen AMI ID
-      KeyName: prod-server-key1  # Replace with your key pair name for SSH access
-      SecurityGroupIds:
-        - !Ref InstanceSecurityGroup
-      Tags:
-        - Key: Name
-          Value: MyEC2Instance
-
-  InstanceSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Enable SSH access
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: 0.0.0.0/0  # Allow SSH access from anywhere (not recommended for production)
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      InstanceType: "t2.micro"
+      ImageId: "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI in us-east-1
+      KeyName: "prod-server-key1"  # Ensure this key exists in your EC2 key pairs
 
   MyS3Bucket:
-    Type: AWS::S3::Bucket
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "my-infrastructure-bucket-123456"  # Ensure this is unique across all S3 buckets
