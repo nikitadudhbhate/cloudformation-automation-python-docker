@@ -41,12 +41,23 @@ def deploy_stack(stack_name, template_data):
         else:
             raise e
 
+def describe_stack_events(stack_name):
+    events = cf_client.describe_stack_events(StackName=stack_name)['StackEvents']
+    for event in events:
+        print(f"{event['Timestamp']} - {event['LogicalResourceId']} - {event['ResourceStatus']} - {event.get('ResourceStatusReason', 'No reason provided')}")
+
 # Function to wait for the stack to complete
 def wait_for_stack(stack_name):
     print(f"Waiting for stack {stack_name} to be created/updated...")
     waiter = cf_client.get_waiter('stack_create_complete')
-    waiter.wait(StackName=stack_name)
-    print(f"Stack {stack_name} has been created/updated successfully.")
+    try:
+        waiter.wait(StackName=stack_name)
+        print(f"Stack {stack_name} has been created/updated successfully.")
+    except botocore.exceptions.WaiterError as e:
+        print(f"Stack creation/update failed: {e}")
+        describe_stack_events(stack_name)  # Describe stack events for debugging
+        raise
+
 
 # Function to get the S3 bucket name from the stack outputs
 def get_s3_bucket_name(stack_name):
