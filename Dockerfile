@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 80
 
 # Run the Python script when the container launches
-CMD ["python", "./provision_infra.py"]
+CMD ["python", "./scripts/provision_infra.py"]
