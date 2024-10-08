@@ -1,20 +1,25 @@
 # Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
-# Set the working directory
-WORKDIR /app
+# Install AWS CLI and dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install
 
-# Copy requirements file and install dependencies
-COPY docker/requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+# Install boto3 using pip
+RUN pip install boto3
 
-# Copy your script into the Docker image
-COPY scripts/provision_infra.py /app/
+# Set the working directory in the container
+WORKDIR /usr/src/app
 
-# Set up AWS credentials using environment variables
-ENV AWS_ACCESS_KEY_ID=your-access-key-id
-ENV AWS_SECRET_ACCESS_KEY=your-secret-access-key
-ENV AWS_REGION=us-east-1
+# Copy the current directory contents into the container at /usr/src/app
+COPY . .
 
-# Run the Python script by default
-CMD ["python", "provision_infra.py"]
+# Make port 80 available to the world outside this container
+EXPOSE 80
+
+# Run the Python script when the container launches
+CMD ["python", "./provision_infra.py"]
