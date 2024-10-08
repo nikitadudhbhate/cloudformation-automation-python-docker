@@ -19,17 +19,38 @@ def load_template(template_file):
         template_data = file.read()
     return template_data
 
+
+def delete_stack(stack_name):
+    """Deletes a CloudFormation stack"""
+    print(f"Deleting stack: {stack_name}...")
+    cf_client.delete_stack(StackName=stack_name)
+    waiter = cf_client.get_waiter('stack_delete_complete')
+    waiter.wait(StackName=stack_name)
+    print(f"Stack {stack_name} deleted successfully.")
+
 # Function to create or update the CloudFormation stack
 def deploy_stack(stack_name, template_data):
+    """Creates or updates the CloudFormation stack"""
     try:
-        # Check if the stack already exists
         response = cf_client.describe_stacks(StackName=stack_name)
-        print(f"Updating existing stack: {stack_name}")
-        cf_client.update_stack(
-            StackName=stack_name,
-            TemplateBody=template_data,
-            Capabilities=['CAPABILITY_NAMED_IAM']
-        )
+        stack_status = response['Stacks'][0]['StackStatus']
+        
+        if stack_status == 'ROLLBACK_COMPLETE':
+            print(f"Stack {stack_name} is in ROLLBACK_COMPLETE state, deleting it...")
+            delete_stack(stack_name)
+            print(f"Recreating stack: {stack_name}")
+            cf_client.create_stack(
+                StackName=stack_name,
+                TemplateBody=template_data,
+                Capabilities=['CAPABILITY_NAMED_IAM']
+            )
+        else:
+            print(f"Updating existing stack: {stack_name}")
+            cf_client.update_stack(
+                StackName=stack_name,
+                TemplateBody=template_data,
+                Capabilities=['CAPABILITY_NAMED_IAM']
+            )
     except cf_client.exceptions.ClientError as e:
         if "does not exist" in str(e):
             print(f"Creating new stack: {stack_name}")
