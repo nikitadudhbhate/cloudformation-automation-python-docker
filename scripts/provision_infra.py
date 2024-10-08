@@ -1,7 +1,7 @@
 import boto3
 import json
 import time
-
+import botocore
 # Define the CloudFormation stack name and template file
 stack_name = "my-cloudformation-stack"
 template_file = "templates/cloudformation-template.yaml"
