@@ -77,8 +77,8 @@ if __name__ == "__main__":
         print(f"Bucket created: {bucket_name}")
 
         # Define some data to upload (this could be file content, JSON, or any other data)
-        file_name = "example_data.txt"
-        data = "This is some sample data to be uploaded to S3."
+        file_name = "cloudformation-template.yaml"
+        data = template_data
 
         # Upload the data to S3
         upload_to_s3(bucket_name, file_name, data)
