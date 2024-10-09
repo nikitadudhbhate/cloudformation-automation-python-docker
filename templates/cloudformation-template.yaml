@@ -5,14 +5,14 @@
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "InstanceType": "t2.medium",
-        "ImageId": "ami-032346ab877c418af",
+        "ImageId": "ami-032346ab877c418af",  // Ensure this is valid in your region
         "KeyName": "${{ secrets.EC2_KEY }}"
       }
     },
     "MyS3Bucket": {
       "Type": "AWS::S3::Bucket",
       "Properties": {
-        "BucketName": "infra-deploy-unique"
+        "BucketName": "infra-deploy-unique-01"  // Use a unique name
       }
     }
   },
