@@ -1,10 +1,11 @@
 import boto3
 import json
-import time
+import os
 import botocore
+
 # Define the CloudFormation stack name and template file
 stack_name = "my-cloudformation-stack"
-template_file = "templates/cloudformation-template.yaml"
+template_file = "templates/cloudformation-template.json"
 
 # Specify your region here
 region = 'us-east-1'
@@ -13,12 +14,20 @@ region = 'us-east-1'
 cf_client = boto3.client('cloudformation', region_name=region)
 s3_client = boto3.client('s3', region_name=region)
 
-# Function to load the CloudFormation template from file
-def load_template(template_file):
+# Get EC2 key name from GitHub Secrets or environment
+ec2_key_name = os.getenv('EC2_KEY')
+
+# Function to load the CloudFormation template from file and replace EC2_KEY_PLACEHOLDER
+def load_and_prepare_template(template_file):
     with open(template_file, 'r') as file:
         template_data = file.read()
-    return template_data
 
+    # Replace the EC2_KEY_PLACEHOLDER with the actual EC2 key name
+    template_data = template_data.replace('EC2_KEY_PLACEHOLDER', ec2_key_name)
+
+    # Convert the template string to JSON format
+    template_body = json.loads(template_data)
+    return json.dumps(template_body)  # Returning the JSON as string
 
 def delete_stack(stack_name):
     """Deletes a CloudFormation stack"""
@@ -28,8 +37,32 @@ def delete_stack(stack_name):
     waiter.wait(StackName=stack_name)
     print(f"Stack {stack_name} deleted successfully.")
 
+# Function to wait for stack creation
+def wait_for_stack_creation(stack_name):
+    print(f"Waiting for stack {stack_name} to be created...")
+    waiter = cf_client.get_waiter('stack_create_complete')
+    try:
+        waiter.wait(StackName=stack_name)
+        print(f"Stack {stack_name} has been created successfully.")
+    except botocore.exceptions.WaiterError as e:
+        print(f"Stack creation failed: {e}")
+        describe_stack_events(stack_name)
+        raise
+
+# Function to wait for stack update
+def wait_for_stack_update(stack_name):
+    print(f"Waiting for stack {stack_name} to be updated...")
+    waiter = cf_client.get_waiter('stack_update_complete')
+    try:
+        waiter.wait(StackName=stack_name)
+        print(f"Stack {stack_name} has been updated successfully.")
+    except botocore.exceptions.WaiterError as e:
+        print(f"Stack update failed: {e}")
+        describe_stack_events(stack_name)
+        raise
+
 # Function to create or update the CloudFormation stack
-def deploy_stack(stack_name, template_data):
+def deploy_stack(stack_name, template_body):
     """Creates or updates the CloudFormation stack"""
     try:
         response = cf_client.describe_stacks(StackName=stack_name)
@@ -41,70 +74,64 @@ def deploy_stack(stack_name, template_data):
             print(f"Recreating stack: {stack_name}")
             cf_client.create_stack(
                 StackName=stack_name,
-                TemplateBody=template_data,
+                TemplateBody=template_body,
                 Capabilities=['CAPABILITY_NAMED_IAM']
             )
+            wait_for_stack_creation(stack_name)
         else:
             print(f"Updating existing stack: {stack_name}")
             cf_client.update_stack(
                 StackName=stack_name,
-                TemplateBody=template_data,
+                TemplateBody=template_body,
                 Capabilities=['CAPABILITY_NAMED_IAM']
             )
+            wait_for_stack_update(stack_name)
     except cf_client.exceptions.ClientError as e:
         if "does not exist" in str(e):
             print(f"Creating new stack: {stack_name}")
             cf_client.create_stack(
                 StackName=stack_name,
-                TemplateBody=template_data,
+                TemplateBody=template_body,
                 Capabilities=['CAPABILITY_NAMED_IAM']
             )
+            wait_for_stack_creation(stack_name)
         else:
             raise e
 
+# Function to describe CloudFormation stack events
 def describe_stack_events(stack_name):
     events = cf_client.describe_stack_events(StackName=stack_name)['StackEvents']
     for event in events:
         print(f"{event['Timestamp']} - {event['LogicalResourceId']} - {event['ResourceStatus']} - {event.get('ResourceStatusReason', 'No reason provided')}")
 
-# Function to wait for the stack to complete
-def wait_for_stack(stack_name):
-    print(f"Waiting for stack {stack_name} to be created/updated...")
-    waiter = cf_client.get_waiter('stack_create_complete')
-    try:
-        waiter.wait(StackName=stack_name)
-        print(f"Stack {stack_name} has been created/updated successfully.")
-    except botocore.exceptions.WaiterError as e:
-        print(f"Stack creation/update failed: {e}")
-        describe_stack_events(stack_name)  # Describe stack events for debugging
-        raise
-
-
 # Function to get the S3 bucket name from the stack outputs
 def get_s3_bucket_name(stack_name):
-    response = cf_client.describe_stacks(StackName=stack_name)
-    outputs = response['Stacks'][0]['Outputs']
-    for output in outputs:
-        if output['OutputKey'] == 'BucketName':
-            return output['OutputValue']
+    try:
+        response = cf_client.describe_stacks(StackName=stack_name)
+        outputs = response['Stacks'][0]['Outputs']
+        for output in outputs:
+            if output['OutputKey'] == 'BucketName':
+                return output['OutputValue']
+    except (KeyError, IndexError):
+        print(f"No Outputs found for stack {stack_name}.")
     return None
 
 # Function to upload a file to the S3 bucket
 def upload_to_s3(bucket_name, file_name, data):
-    print(f"Uploading {file_name} to S3 bucket {bucket_name}")
-    s3_client.put_object(Bucket=bucket_name, Key=file_name, Body=data)
-    print(f"File {file_name} uploaded successfully.")
+    try:
+        print(f"Uploading {file_name} to S3 bucket {bucket_name}")
+        s3_client.put_object(Bucket=bucket_name, Key=file_name, Body=data)
+        print(f"File {file_name} uploaded successfully.")
+    except botocore.exceptions.ClientError as e:
+        print(f"Failed to upload {file_name} to S3: {e}")
 
 # Main script execution
 if __name__ == "__main__":
-    # Load the CloudFormation template
-    template_data = load_template(template_file)
+    # Load and prepare the CloudFormation template with the actual EC2 key name
+    template_body = load_and_prepare_template(template_file)
 
     # Deploy the CloudFormation stack
-    deploy_stack(stack_name, template_data)
-
-    # Wait for the stack to be fully deployed
-    wait_for_stack(stack_name)
+    deploy_stack(stack_name, template_body)
 
     # Get the S3 bucket name from the stack
     bucket_name = get_s3_bucket_name(stack_name)
@@ -112,12 +139,10 @@ if __name__ == "__main__":
         print(f"Bucket created: {bucket_name}")
 
         # Define some data to upload (this could be file content, JSON, or any other data)
-        file_name = "cloudformation-template.yaml"
-        data = template_data
+        file_name = "cloudformation-template.json"
+        data = template_body
 
         # Upload the data to S3
         upload_to_s3(bucket_name, file_name, data)
     else:
         print("S3 bucket not found in the stack outputs.")
-
-
