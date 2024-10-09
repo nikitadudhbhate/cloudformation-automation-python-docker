@@ -6,7 +6,7 @@
       "Properties": {
         "InstanceType": "t2.medium",
         "ImageId": "ami-032346ab877c418af",  // Ensure this is valid in your region
-        "KeyName": "${{ secrets.EC2_KEY }}"
+        "KeyName": "EC2_KEY_PLACEHOLDER"
       }
     },
     "MyS3Bucket": {
