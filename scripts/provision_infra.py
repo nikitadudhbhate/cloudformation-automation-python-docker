@@ -29,6 +29,10 @@ def load_and_prepare_template(template_file):
     # Replace the placeholder with the actual EC2 key name
     template_data = template_data.replace('EC2_KEY_PLACEHOLDER', ec2_key_name)
 
+    # Print the CloudFormation template for debugging
+    print("CloudFormation Template:")
+    print(template_data)
+
     # Convert the template string to JSON or YAML as needed
     return json.loads(template_data)
 
@@ -75,29 +79,35 @@ def deploy_stack(stack_name, template_body):
             print(f"Stack {stack_name} is in ROLLBACK_COMPLETE state, deleting it...")
             delete_stack(stack_name)
             print(f"Recreating stack: {stack_name}")
-            cf_client.create_stack(
+            response = cf_client.create_stack(
                 StackName=stack_name,
-                TemplateBody=template_body,
+                TemplateBody=json.dumps(template_body),
                 Capabilities=['CAPABILITY_NAMED_IAM']
             )
+            print("Create stack response:", response)
             wait_for_stack_creation(stack_name)
         else:
             print(f"Updating existing stack: {stack_name}")
-            cf_client.update_stack(
+            response = cf_client.update_stack(
                 StackName=stack_name,
-                TemplateBody=template_body,
+                TemplateBody=json.dumps(template_body),
                 Capabilities=['CAPABILITY_NAMED_IAM']
             )
+            print("Update stack response:", response)
             wait_for_stack_update(stack_name)
     except cf_client.exceptions.ClientError as e:
         if "does not exist" in str(e):
             print(f"Creating new stack: {stack_name}")
-            cf_client.create_stack(
-                StackName=stack_name,
-                TemplateBody=template_body,
-                Capabilities=['CAPABILITY_NAMED_IAM']
-            )
-            wait_for_stack_creation(stack_name)
+            try:
+                response = cf_client.create_stack(
+                    StackName=stack_name,
+                    TemplateBody=json.dumps(template_body),
+                    Capabilities=['CAPABILITY_NAMED_IAM']
+                )
+                print("Create stack response:", response)
+                wait_for_stack_creation(stack_name)
+            except botocore.exceptions.ClientError as e:
+                print(f"Error creating stack: {e}")
         else:
             raise e
 
@@ -149,5 +159,3 @@ if __name__ == "__main__":
         upload_to_s3(bucket_name, file_name, data)
     else:
         print("S3 bucket not found in the stack outputs.")
-
-
