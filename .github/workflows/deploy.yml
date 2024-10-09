@@ -19,16 +19,16 @@ jobs:
     - name: Build Docker image
       run: docker build -t infra-provision .
 
-    # Debugging Step: Print the environment variables (do not expose secrets in a real production environment)
+    # Debugging Step: Print the environment variables (remove this after debugging)
     - name: Debug Environment Variables
       run: |
-        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
-        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-        echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}"
-        echo "EC2_KEY=${{ secrets.EC2_KEY }}"
+        echo "AWS_ACCESS_KEY_ID: ${#{{ secrets.AWS_ACCESS_KEY_ID }} characters long}"
+        echo "AWS_SECRET_ACCESS_KEY: ${#{{ secrets.AWS_SECRET_ACCESS_KEY }} characters long}"
+        echo "AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}"
+        echo "EC2_KEY: ${{ secrets.EC2_KEY }}"
       shell: bash
 
-    # Step 4: Run the Docker container
+    # Step 4: Run the Docker container with secrets passed as environment variables
     - name: Run CloudFormation Automation
       run: |
         docker run --env AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
