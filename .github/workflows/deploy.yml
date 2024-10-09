@@ -19,12 +19,10 @@ jobs:
     - name: Build Docker image
       run: docker build -t infra-provision .
 
-    # Step 4: Run the Docker container
     - name: Run CloudFormation Automation
       run: |
-        docker run -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-                     -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-                     -e AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }} \
-                     -e EC2_KEY=${{ secrets.EC2_KEY }} \
-                      infra-provision
-      
+        docker run --env AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+                   --env AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+                   --env AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }} \
+                   --env EC2_KEY=${{ secrets.EC2_KEY }} \
+                   infra-provision
