@@ -5,7 +5,7 @@ import botocore
 
 # Define the CloudFormation stack name and template file
 stack_name = "my-cloudformation-stack"
-template_file = "templates/cloudformation-template.json"
+template_file = "templates/cloudformation-template.yaml"
 
 # Specify your region here
 region = 'us-east-1'
