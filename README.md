@@ -17,7 +17,7 @@ EC2_KEY (The name of your EC2 key pair)
 ### Step 2: Set Up GitHub Secrets
 - In your GitHub repository:
 - Go to Settings > Secrets.
-- `Add the following secrets:`
+- Add the following secrets:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_DEFAULT_REGION`
