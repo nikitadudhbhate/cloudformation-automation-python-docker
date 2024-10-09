@@ -17,17 +17,20 @@ s3_client = boto3.client('s3', region_name=region)
 # Get EC2 key name from GitHub Secrets or environment
 ec2_key_name = os.getenv('EC2_KEY')
 
-# Function to load the CloudFormation template from file and replace EC2_KEY_PLACEHOLDER
+# Check if EC2_KEY is missing
+if ec2_key_name is None:
+    raise ValueError("EC2_KEY environment variable is not set or available.")
+
+# Load and prepare the CloudFormation template
 def load_and_prepare_template(template_file):
     with open(template_file, 'r') as file:
         template_data = file.read()
 
-    # Replace the EC2_KEY_PLACEHOLDER with the actual EC2 key name
+    # Replace the placeholder with the actual EC2 key name
     template_data = template_data.replace('EC2_KEY_PLACEHOLDER', ec2_key_name)
 
-    # Convert the template string to JSON format
-    template_body = json.loads(template_data)
-    return json.dumps(template_body)  # Returning the JSON as string
+    # Convert the template string to JSON or YAML as needed
+    return json.loads(template_data)
 
 def delete_stack(stack_name):
     """Deletes a CloudFormation stack"""
