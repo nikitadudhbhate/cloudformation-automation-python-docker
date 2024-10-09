@@ -1,7 +1,7 @@
-Automate Python-Based Infrastructure Provisioning with Docker & AWS CloudFormation
+# Automate Python-Based Infrastructure Provisioning with Docker & AWS CloudFormation
 This repository automates the provisioning of AWS infrastructure (e.g., an EC2 instance and an S3 bucket) using a Dockerized Python environment, CloudFormation templates, and GitHub Actions.
 
-Prerequisites
+## Prerequisites
 Before you begin, ensure you have the following:
 
 AWS Account with sufficient permissions to create resources (EC2, S3).
